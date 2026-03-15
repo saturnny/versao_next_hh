@@ -4,10 +4,11 @@ import { authOptions } from '@/lib/auth'
 import { updateUsuario } from '@/lib/sharepoint'
 import bcrypt from 'bcryptjs'
 
-interface RouteParams { params: { id: string } }
+interface RouteParams { params: Promise<{ id: string }> }
 
 // PATCH /api/admin/usuarios/[id]
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
+  const { id } = await params
   const session = await getServerSession(authOptions)
   const user = session?.user as { tipoUsuario?: string } | undefined
   if (!session || user?.tipoUsuario !== 'Admin') {
@@ -26,6 +27,6 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   if (body.ativo !== undefined) updateData.ativo = body.ativo
   if (body.senha) updateData.senhaHash = await bcrypt.hash(body.senha, 12)
 
-  await updateUsuario(params.id, updateData)
+  await updateUsuario(id, updateData)
   return NextResponse.json({ success: true })
 }

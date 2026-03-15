@@ -4,15 +4,16 @@ import { authOptions } from '@/lib/auth'
 import { getLancamentoById, updateLancamento, deleteLancamento, getAtividades } from '@/lib/sharepoint'
 
 interface RouteParams {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 // GET /api/lancamentos/[id]
 export async function GET(_req: NextRequest, { params }: RouteParams) {
+  const { id } = await params
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  const lancamento = await getLancamentoById(params.id)
+  const lancamento = await getLancamentoById(id)
   if (!lancamento) return NextResponse.json({ error: 'Não encontrado' }, { status: 404 })
 
   const user = session.user as { id: string; tipoUsuario?: string }
@@ -26,10 +27,11 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 
 // PUT /api/lancamentos/[id]
 export async function PUT(req: NextRequest, { params }: RouteParams) {
+  const { id } = await params
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  const lancamento = await getLancamentoById(params.id)
+  const lancamento = await getLancamentoById(id)
   if (!lancamento) return NextResponse.json({ error: 'Não encontrado' }, { status: 404 })
 
   const user = session.user as { id: string; tipoUsuario?: string }
@@ -52,7 +54,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       }
     }
 
-    await updateLancamento(params.id, {
+    await updateLancamento(id, {
       horaInicio: body.horaInicio,
       horaFim: body.horaFim,
       atividadeId: body.atividadeId,
@@ -70,10 +72,11 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
 // DELETE /api/lancamentos/[id]
 export async function DELETE(_req: NextRequest, { params }: RouteParams) {
+  const { id } = await params
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  const lancamento = await getLancamentoById(params.id)
+  const lancamento = await getLancamentoById(id)
   if (!lancamento) return NextResponse.json({ error: 'Não encontrado' }, { status: 404 })
 
   const user = session.user as { id: string; tipoUsuario?: string }
@@ -81,6 +84,6 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
   }
 
-  await deleteLancamento(params.id)
+  await deleteLancamento(id)
   return NextResponse.json({ success: true })
 }
